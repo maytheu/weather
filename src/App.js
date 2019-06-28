@@ -34,7 +34,7 @@ class App extends Component {
 
   componentWillReceiveProps(newProps) {
     if (newProps.coords !== null) {
-      const BASE_URL = "http://api.openweathermap.org/data/2.5/weather?lat=";
+      const BASE_URL = "https://api.openweathermap.org/data/2.5/weather?lat=";
 
       fetch(
         `${BASE_URL}${newProps.coords.latitude}&lon=${
@@ -55,7 +55,6 @@ class App extends Component {
             city: items,
             isLoading: false
           }));
-          console.log(items);
         })
         .catch(error => this.setState({ error, isLoading: false }));
     }
