@@ -20,13 +20,6 @@ class App extends Component {
   componentDidMount() {
     if (this.props.isGeolocationAvailable) {
       if (this.props.isGeolocationEnabled) {
-        // try{
-        // if(this.props.coords){
-        //   console.log(this.props.coords)
-        // }}catch(this.props.coords == null){
-
-        // }
-
         console.log(this.props.coords);
       } else {
         this.setState({ error: "Location is turned off", isLoading: false });
@@ -65,7 +58,6 @@ class App extends Component {
           console.log(items);
         })
         .catch(error => this.setState({ error, isLoading: false }));
-      console.log(newProps);
     }
   }
 
@@ -87,7 +79,6 @@ class App extends Component {
 
   render() {
     const { isLoading, error, city } = this.state;
-    console.log(this.props);
     if (isLoading) {
       return (
         <div className="app">
