@@ -13,14 +13,45 @@ class App extends Component {
     this.state = {
       city: {},
       isLoading: true,
-      error: null
+      error: "",
+      message: ""
     };
   }
 
-  componentDidMount() {
-    if (this.props.isGeolocationAvailable) {
-      if (this.props.isGeolocationEnabled) {
-        console.log(this.props.coords);
+  componentWillReceiveProps(newProps) {
+    if (newProps.isGeolocationAvailable) {
+      if (newProps.isGeolocationEnabled) {
+        if (newProps.coords !== null) {
+          const BASE_URL =
+            "https://api.openweathermap.org/data/2.5/weather?lat=";
+
+          fetch(
+            `${BASE_URL}${newProps.coords.latitude}&lon=${
+              newProps.coords.longitude
+            }&appid=${process.env.REACT_APP_APPID}`,
+            { method: "GET" }
+          ) //get the url
+            .then(response => {
+              if (response.ok) {
+                return response.json();
+              } else {
+                throw new Error("Something went wrong ...");
+              }
+            })
+            .then(json => {
+              let items = json;
+              this.setState(prevState => ({
+                city: items,
+                isLoading: false
+              }));
+            })
+            .catch(error =>
+              this.setState({
+                error,
+                isLoading: false
+              })
+            );
+        }
       } else {
         this.setState({ error: "Location is turned off", isLoading: false });
       }
@@ -32,47 +63,19 @@ class App extends Component {
     }
   }
 
-  componentWillReceiveProps(newProps) {
-    if (newProps.coords !== null) {
-      const BASE_URL = "https://api.openweathermap.org/data/2.5/weather?lat=";
-
-      fetch(
-        `${BASE_URL}${newProps.coords.latitude}&lon=${
-          newProps.coords.longitude
-        }&appid=${process.env.REACT_APP_APPID}`,
-        { method: "GET" }
-      ) //get the url
-        .then(response => { 
-          if (response.ok) {
-            return response.json();
-          } else {
-            throw new Error("Something went wrong ...");
-          }
-        })
-        .then(json => {
-          let items = json;
-          this.setState(prevState => ({
-            city: items,
-            isLoading: false
-          }));
-        })
-        .catch(error => this.setState({ error, isLoading: false }));
-    }
-  }
-
   convertTemp = kel => {
     let cel = kel - 273.15;
-    return cel.toFixed(2);
+    return cel.toFixed(1);
   };
 
   showTime = unix => {
     let date = new Date(unix * 1000);
     let hour = date.getHours();
     let min = date.getMinutes();
-    if (hour < 12) {
-      return `${hour} : ${min < 10 ? `0${min}` : min}  AM`;
+    if (hour < 13) {
+      return `${hour} : ${min < 11 ? `0${min}` : min}  AM`;
     } else {
-      return `${hour % 12} : ${min} PM`;
+      return `${hour % 12} : ${min < 11 ? `0${min}` : min} PM`;
     }
   };
 
@@ -97,7 +100,7 @@ class App extends Component {
       return (
         <div className="app">
           <div className="forecast-loader">
-            <p>{error.message}</p>
+            <p>{error.message || error}</p>
           </div>
         </div>
       );
@@ -168,8 +171,9 @@ class App extends Component {
                 <Card.Body>
                   <div>Wind Speed: {city.wind.speed}m/s</div>
                   <div>
-                    Wind Direction: {city.wind.deg.toFixed(2)}
-                    &deg;
+                    {/* Wind Direction:
+                    {city.wind.deg ? city.wind.deg.toFixed(1) : "N/A"}
+                    &deg; */}
                   </div>
                 </Card.Body>
               </Accordion.Collapse>
@@ -180,7 +184,12 @@ class App extends Component {
               </Accordion.Toggle>
               <Accordion.Collapse eventKey="4">
                 <Card.Body>
-                  <img src={`http://openweathermap.org/img/w/${city.weather[0].icon}.png`} alt='icon'/>
+                  <img
+                    src={`https://openweathermap.org/img/w/${
+                      city.weather[0].icon
+                    }.png`}
+                    alt="icon"
+                  />
                   <div>Summary: {city.weather[0].main}</div>
                   <div>Desc: {city.weather[0].description}</div>
                 </Card.Body>
@@ -197,5 +206,5 @@ export default geolocated({
   positionOptions: {
     enableHighAccuracy: false
   },
-  userDecisionTimeout: 100000
+  userDecisionTimeout: 150000
 })(App);
